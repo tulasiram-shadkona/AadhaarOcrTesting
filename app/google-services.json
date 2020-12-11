@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "972934951179",
+    "project_id": "ocrtest-80733",
+    "storage_bucket": "ocrtest-80733.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:972934951179:android:51edb6cc968464d485b20e",
+        "android_client_info": {
+          "package_name": "com.example.robolectrictestframework"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "972934951179-fqop0c8t17bi2ur32jvt75dd3q8ebbbn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqZ6bKMbtQfhSh0FZF3cZPv5SDkdAfHTQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "972934951179-fqop0c8t17bi2ur32jvt75dd3q8ebbbn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

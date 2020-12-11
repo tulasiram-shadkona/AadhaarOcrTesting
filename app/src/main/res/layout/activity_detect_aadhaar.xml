@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:context=".textreg.DetectAadhaarActivity">
+
+    <Button
+        android:id="@+id/camera_action"
+        android:text="Capture Aadhaar card"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+    </Button>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Result : ">
+    </TextView>
+    <TextView
+        android:id="@+id/aadhaarResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:textSize="16sp"
+        android:text="">
+
+    </TextView>
+
+
+
+
+
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="100dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp" >
+        <TableRow android:padding="5dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textStyle="bold|italic"
+                android:text="Aadhar Number" />
+            <TextView
+                android:id="@+id/aadhaarNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="">
+            </TextView>
+        </TableRow>
+        <TableRow android:padding="5dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textStyle="bold|italic"
+                android:text="Name" />
+            <TextView
+                android:id="@+id/aadhaarName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="">
+            </TextView>
+        </TableRow>
+        <TableRow android:padding="5dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textStyle="bold|italic"
+                android:text="Year" />
+            <TextView
+                android:id="@+id/aadharDateOfYear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="" />
+        </TableRow>
+        <TableRow android:padding="5dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textStyle="bold|italic"
+                android:text="Gender" />
+            <TextView
+                android:id="@+id/aadharGender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="" />
+        </TableRow>
+    </TableLayout>
+
+
+</LinearLayout>
