@@ -26,9 +26,13 @@ import com.example.robolectrictestframework.R;
 import com.example.robolectrictestframework.model.OcrDataRecord;
 import com.example.robolectrictestframework.utils.Tools;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -41,9 +45,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.AADHAR_NO_KEY;
+import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.DOB_ON_AADHAR_KEY;
+import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.GENDER_ON_AADHAR_KEY;
+import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.IMAGE_PATH;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.IMAGE_TEXT;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.MOBILE_NUM_KEY;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.NAME_KEY;
+import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.NAME_ON_AADHAR_KEY;
 
 public class DetectAadhaarActivity extends AppCompatActivity implements DetectAadhaarContract.View , View.OnClickListener {
 
@@ -55,6 +64,10 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
     public static final int REQUEST_IMAGE = 100;
     OcrDataSharedPreference pref;
     private DatabaseReference mDatabase;
+
+    // get the Firebase  storage reference
+    FirebaseStorage storage = FirebaseStorage.getInstance();
+    StorageReference storageReference = storage.getReference();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +105,11 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
         TextView aadhaarGender = (TextView) findViewById(R.id.aadharGender);
 
         pref.put(IMAGE_TEXT,map.get("IMAGE_TEXT"));
+        pref.put(AADHAR_NO_KEY, map.get("AADHAR"));
+        pref.put(NAME_ON_AADHAR_KEY, map.get("NAME"));
+        pref.put(DOB_ON_AADHAR_KEY, map.get("DATE_OF_YEAR"));
+        pref.put(GENDER_ON_AADHAR_KEY, map.get("GENDER"));
+
         resultTextView.setText(map.get("IMAGE_TEXT"));
         aadhaarNumber.setText(map.get("AADHAR"));
         aadhaarName.setText(map.get("NAME"));
@@ -108,13 +126,21 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
         String usrNameStr =  pref.getString(NAME_KEY);
         String mobileNum = pref.getString(MOBILE_NUM_KEY);
         String ocrImgText = pref.getString(IMAGE_TEXT);
+        String aadharNo = pref.getString(AADHAR_NO_KEY);
+        String name = pref.getString(NAME_ON_AADHAR_KEY);
+        String dob = pref.getString(DOB_ON_AADHAR_KEY);
+        String gender = pref.getString(GENDER_ON_AADHAR_KEY);
         String uuid = Tools.generateUuid();
-        writeNewUser(uuid,usrNameStr,mobileNum,ocrImgText);
+
+        writeNewUser(uuid,usrNameStr,mobileNum,ocrImgText, aadharNo, name, dob, gender);
     }
 
 
     @Override
     public void showAadhaarDetectOptions() {
+        //Making image path empty before capturing
+        pref.put(IMAGE_PATH, "");
+
         Dexter.withActivity(DetectAadhaarActivity.this   )
                 .withPermissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .withListener(new MultiplePermissionsListener() {
@@ -189,6 +215,9 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
             if (requestCode == REQUEST_IMAGE) {
                 if (resultCode == Activity.RESULT_OK) {
                     Uri uri = intent.getParcelableExtra("path");
+
+                    pref.put(IMAGE_PATH, uri.toString());
+
                     try {
                         // You can update this bitmap to your server
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
@@ -227,8 +256,25 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
 
     }
 
-    private void writeNewUser(String userId, String name, String mobile, String ocrImgText) {
-        OcrDataRecord user = new OcrDataRecord(name, mobile,ocrImgText);
+    /**
+     * @param userId : User Id
+     * @param userName : Survey User Name
+     * @param mobile : Survey User Mobile No
+     * @param ocrImgText : Raw text before processing
+     * @param aadharNo : Aadhar No
+     * @param name : Name on Aadhar Card
+     * @param dob : Date of Birth on Aadhar Card
+     * @param gender : Gender on Aadhar Card
+     * */
+    private void writeNewUser(String userId, String userName, String mobile, String ocrImgText, String aadharNo, String name, String dob, String gender) {
+        String imgPath = "";
+
+        if(aadharNo.isEmpty() || name.isEmpty() || dob.isEmpty() || gender.isEmpty()) {
+            imgPath = pref.getString(IMAGE_PATH);
+            storeImage(imgPath);
+        }
+
+        OcrDataRecord user = new OcrDataRecord(userName, mobile,ocrImgText, aadharNo, name, dob, gender, imgPath);
 
         mDatabase.child("users").child(userId).setValue(user).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -238,6 +284,31 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
         });
     }
 
+    private void storeImage(String imagePath) {
+        Uri imageUri =  Uri.parse(imagePath);
+
+        if(!imagePath.isEmpty() && imagePath != null) {
+            StorageReference stgRef = storageReference.child("images/"+imagePath);
+
+            stgRef.putFile(imageUri)
+                .addOnSuccessListener(
+                        new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                Log.d("Image Store Success", "Image Uploaded");
+                            }
+                        }
+                )
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d("Store Image", e.toString());
+                            }
+                        }
+                );
+        }
+    }
 
 
 }

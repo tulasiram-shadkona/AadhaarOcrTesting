@@ -21,10 +21,12 @@ public class OcrDataSharedPreference {
 
         NAME_KEY,
         MOBILE_NUM_KEY,
-        IMAGE_TEXT
-
-
-
+        IMAGE_TEXT,
+        AADHAR_NO_KEY,
+        NAME_ON_AADHAR_KEY,
+        DOB_ON_AADHAR_KEY,
+        GENDER_ON_AADHAR_KEY,
+        IMAGE_PATH
     }
 
     private OcrDataSharedPreference(Context context) {
