@@ -7,14 +7,17 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,6 +44,7 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.shadkona.aadhaar.ocr.mylibrary.DetectAadhaarContract;
 import com.shadkona.aadhaar.ocr.mylibrary.DetectAadhaarPresenter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +52,8 @@ import java.util.List;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.AADHAR_NO_KEY;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.DOB_ON_AADHAR_KEY;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.GENDER_ON_AADHAR_KEY;
-import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.IMAGE_PATH;
+import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.IMAGE_BASE64;
+import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.IMAGE_MIMETYPE;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.IMAGE_TEXT;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.MOBILE_NUM_KEY;
 import static com.example.robolectrictestframework.OcrDataSharedPreference.Key.NAME_KEY;
@@ -139,7 +144,8 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
     @Override
     public void showAadhaarDetectOptions() {
         //Making image path empty before capturing
-        pref.put(IMAGE_PATH, "");
+        pref.put(IMAGE_BASE64, "");
+        pref.put(IMAGE_MIMETYPE, "");
 
         Dexter.withActivity(DetectAadhaarActivity.this   )
                 .withPermissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -216,11 +222,22 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
                 if (resultCode == Activity.RESULT_OK) {
                     Uri uri = intent.getParcelableExtra("path");
 
-                    pref.put(IMAGE_PATH, uri.toString());
+                    String mimeType = "";
+                    String fileExt = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+
+                    if(fileExt != null) {
+                        mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExt);
+                    }
+
+                    String ext = mimeType.substring(mimeType.lastIndexOf("/")+1);
 
                     try {
                         // You can update this bitmap to your server
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+                        String imgTxt = convertBitmapToString(bitmap, ext);
+
+                        pref.put(IMAGE_BASE64, imgTxt);
+                        pref.put(IMAGE_MIMETYPE, ext);
 //                        extractText(bitmap);
                         presenter.getImageDataAsText(bitmap);
                         // loading profile image from local cache
@@ -267,15 +284,21 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
      * @param gender : Gender on Aadhar Card
      * */
     private void writeNewUser(String userId, String userName, String mobile, String ocrImgText, String aadharNo, String name, String dob, String gender) {
-        String imgPath = "";
+        String imgTxt = "";
+        String imgMime= "";
+
+        if(aadharNo == null) { aadharNo = ""; }
+        if(name == null) { name = ""; }
+        if(dob == null) { dob = ""; }
+        if(gender == null) { gender = ""; }
 
         if(aadharNo.isEmpty() || name.isEmpty() || dob.isEmpty() || gender.isEmpty()) {
-            imgPath = pref.getString(IMAGE_PATH);
-            storeImage(imgPath);
+            imgTxt = pref.getString(IMAGE_BASE64);
+            imgMime = pref.getString(IMAGE_MIMETYPE);
         }
 
-        OcrDataRecord user = new OcrDataRecord(userName, mobile,ocrImgText, aadharNo, name, dob, gender, imgPath);
-
+        OcrDataRecord user = new OcrDataRecord(userName, mobile,ocrImgText, aadharNo, name, dob, gender, imgTxt, imgMime);
+        Log.e("Record",user.getMimeType());
         mDatabase.child("users").child(userId).setValue(user).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
@@ -284,31 +307,27 @@ public class DetectAadhaarActivity extends AppCompatActivity implements DetectAa
         });
     }
 
-    private void storeImage(String imagePath) {
-        Uri imageUri =  Uri.parse(imagePath);
-
-        if(!imagePath.isEmpty() && imagePath != null) {
-            StorageReference stgRef = storageReference.child("images/"+imagePath);
-
-            stgRef.putFile(imageUri)
-                .addOnSuccessListener(
-                        new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                Log.d("Image Store Success", "Image Uploaded");
-                            }
-                        }
-                )
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.d("Store Image", e.toString());
-                            }
-                        }
-                );
-        }
+    private String convertBitmapToString(Bitmap bitmap, String mimeType) {
+        ByteArrayOutputStream opStream = new ByteArrayOutputStream();
+        bitmap.compress(getCompressFormat(mimeType), 100, opStream);
+        return Base64.encodeToString(opStream.toByteArray(), Base64.DEFAULT);
     }
 
+    private Bitmap.CompressFormat getCompressFormat(String mimeType) {
+        Bitmap.CompressFormat comFmt = null;
 
+        String ext = mimeType.toUpperCase();
+        switch (ext) {
+            case "JPEG" :
+            case "JPG" :
+                comFmt = Bitmap.CompressFormat.JPEG;
+                break;
+            case  "PNG":
+                comFmt = Bitmap.CompressFormat.PNG;
+                break;
+            default:
+                comFmt = Bitmap.CompressFormat.JPEG;
+        }
+        return comFmt;
+    }
 }

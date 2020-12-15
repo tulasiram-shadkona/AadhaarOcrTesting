@@ -26,7 +26,8 @@ public class OcrDataSharedPreference {
         NAME_ON_AADHAR_KEY,
         DOB_ON_AADHAR_KEY,
         GENDER_ON_AADHAR_KEY,
-        IMAGE_PATH
+        IMAGE_BASE64,
+        IMAGE_MIMETYPE
     }
 
     private OcrDataSharedPreference(Context context) {

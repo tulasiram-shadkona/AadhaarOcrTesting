@@ -9,9 +9,10 @@ public class OcrDataRecord {
     private String name;
     private String dob;
     private String gender;
-    private String imagePath;
+    private String imageText;
+    private String mimeType;
 
-    public OcrDataRecord(String userName, String mobile, String ocrImageText, String aadharNo, String name, String dob, String gender, String imagePath) {
+    public OcrDataRecord(String userName, String mobile, String ocrImageText, String aadharNo, String name, String dob, String gender, String imageText, String mimeType) {
         this.userName = userName;
         this.mobile = mobile;
         this.ocrImageText = ocrImageText;
@@ -19,7 +20,8 @@ public class OcrDataRecord {
         this.name = name;
         this.dob = dob;
         this.gender = gender;
-        this.imagePath = imagePath;
+        this.imageText = imageText;
+        this.mimeType = mimeType;
     }
 
     public String getUserName() {
@@ -78,11 +80,34 @@ public class OcrDataRecord {
         this.gender = gender;
     }
 
-    public String getImagePath() {
-        return imagePath;
+    public String getImageText() {
+        return imageText;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public void setImageText(String imageText) {
+        this.imageText = imageText;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    @Override
+    public String toString() {
+        return "OcrDataRecord{" +
+                "userName='" + userName + '\'' +
+                ", mobile='" + mobile + '\'' +
+                ", ocrImageText='" + ocrImageText + '\'' +
+                ", aadharNo='" + aadharNo + '\'' +
+                ", name='" + name + '\'' +
+                ", dob='" + dob + '\'' +
+                ", gender='" + gender + '\'' +
+                ", imageText='" + imageText + '\'' +
+                ", mimeType='" + mimeType + '\'' +
+                '}';
     }
 }
