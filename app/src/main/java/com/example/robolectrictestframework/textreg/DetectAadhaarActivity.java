@@ -41,8 +41,8 @@ import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
-import com.shadkona.aadhaar.ocr.mylibrary.DetectAadhaarContract;
-import com.shadkona.aadhaar.ocr.mylibrary.DetectAadhaarPresenter;
+import com.example.robolectrictestframework.textreg.DetectAadhaarContract;
+import com.example.robolectrictestframework.textreg.DetectAadhaarPresenter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
